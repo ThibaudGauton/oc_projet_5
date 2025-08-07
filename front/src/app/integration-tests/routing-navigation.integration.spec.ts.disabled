@@ -1,0 +1,355 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Router } from '@angular/router';
+import { Location } from '@angular/common';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { Component } from '@angular/core';
+import { expect } from '@jest/globals';
+import { RouterTestingModule } from '@angular/router/testing';
+
+import { AppComponent } from '../app.component';
+import { AuthGuard } from '../guards/auth.guard';
+import { UnauthGuard } from '../guards/unauth.guard';
+import { SessionService } from '../services/session.service';
+import { SessionInformation } from '../interfaces/sessionInformation.interface';
+import { LoginComponent } from '../features/auth/components/login/login.component';
+import { RegisterComponent } from '../features/auth/components/register/register.component';
+import { MeComponent } from '../components/me/me.component';
+import { NotFoundComponent } from '../components/not-found/not-found.component';
+
+// Mock components for testing routing
+@Component({ template: 'Sessions Mock' })
+class MockSessionsComponent { }
+
+@Component({ template: 'Login Mock' })
+class MockLoginComponent { }
+
+@Component({ template: 'Register Mock' })
+class MockRegisterComponent { }
+
+@Component({ template: 'Me Mock' })
+class MockMeComponent { }
+
+@Component({ template: 'Home Mock' })
+class MockHomeComponent { }
+
+describe('Routing and Navigation Integration Tests', () => {
+  let router: Router;
+  let location: Location;
+  let sessionService: SessionService;
+  let authGuard: AuthGuard;
+  let unauthGuard: UnauthGuard;
+  let fixture: ComponentFixture<AppComponent>;
+
+  const mockSessionInfo: SessionInformation = {
+    token: 'mock-jwt-token',
+    type: 'Bearer',
+    id: 1,
+    username: 'test@example.com',
+    firstName: 'Test',
+    lastName: 'User',
+    admin: false
+  };
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      declarations: [
+        AppComponent,
+        MockSessionsComponent,
+        MockLoginComponent,
+        MockRegisterComponent,
+        MockMeComponent,
+        MockHomeComponent,
+        NotFoundComponent
+      ],
+      imports: [
+        HttpClientTestingModule,
+        RouterTestingModule.withRoutes([
+          { path: '', component: MockHomeComponent },
+          { path: 'login', component: MockLoginComponent },
+          { path: 'register', component: MockRegisterComponent },
+          { path: 'sessions', component: MockSessionsComponent, canActivate: [AuthGuard] },
+          { path: 'me', component: MockMeComponent, canActivate: [AuthGuard] },
+          { path: '404', component: NotFoundComponent },
+          { path: '**', redirectTo: '404' }
+        ])
+      ],
+      providers: [
+        SessionService,
+        AuthGuard,
+        UnauthGuard
+      ]
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(AppComponent);
+    router = TestBed.inject(Router);
+    location = TestBed.inject(Location);
+    sessionService = TestBed.inject(SessionService);
+    authGuard = TestBed.inject(AuthGuard);
+    unauthGuard = TestBed.inject(UnauthGuard);
+
+    fixture.detectChanges();
+  });
+
+  describe('Unauthenticated User Navigation', () => {
+    beforeEach(() => {
+      // Ensure user is logged out
+      sessionService.logOut();
+    });
+
+    it('should redirect to login when accessing protected routes without authentication', async () => {
+      // Act - Try to navigate to protected route
+      await router.navigate(['/sessions']);
+
+      // Assert
+      expect(location.path()).toBe('/login');
+    });
+
+    it('should redirect to login when accessing me page without authentication', async () => {
+      // Act
+      await router.navigate(['/me']);
+
+      // Assert
+      expect(location.path()).toBe('/login');
+    });
+
+    it('should allow navigation to login page', async () => {
+      // Act
+      await router.navigate(['/login']);
+
+      // Assert
+      expect(location.path()).toBe('/login');
+    });
+
+    it('should allow navigation to register page', async () => {
+      // Act
+      await router.navigate(['/register']);
+
+      // Assert
+      expect(location.path()).toBe('/register');
+    });
+
+    it('should navigate to 404 page for invalid routes', async () => {
+      // Act
+      await router.navigate(['/invalid-route']);
+
+      // Assert
+      expect(location.path()).toBe('/404');
+    });
+  });
+
+  describe('Authenticated User Navigation', () => {
+    beforeEach(() => {
+      // Login user
+      sessionService.logIn(mockSessionInfo);
+    });
+
+    it('should allow access to sessions page when authenticated', async () => {
+      // Act
+      await router.navigate(['/sessions']);
+
+      // Assert
+      expect(location.path()).toBe('/sessions');
+    });
+
+    it('should allow access to me page when authenticated', async () => {
+      // Act
+      await router.navigate(['/me']);
+
+      // Assert
+      expect(location.path()).toBe('/me');
+    });
+
+    it('should redirect authenticated user away from login page', async () => {
+      // Act
+      await router.navigate(['/login']);
+
+      // Assert - Should redirect to sessions or home based on UnauthGuard logic
+      expect(location.path()).not.toBe('/login');
+    });
+
+    it('should redirect authenticated user away from register page', async () => {
+      // Act
+      await router.navigate(['/register']);
+
+      // Assert
+      expect(location.path()).not.toBe('/register');
+    });
+  });
+
+  describe('Guard Integration Tests', () => {
+    it('should test AuthGuard behavior directly', () => {
+      // Arrange - User not logged in
+      sessionService.logOut();
+
+      // Act
+      const canActivateResult = authGuard.canActivate();
+
+      // Assert
+      expect(canActivateResult).toBe(false);
+    });
+
+    it('should allow access when user is authenticated', () => {
+      // Arrange - User logged in
+      sessionService.logIn(mockSessionInfo);
+
+      // Act
+      const canActivateResult = authGuard.canActivate();
+
+      // Assert
+      expect(canActivateResult).toBe(true);
+    });
+
+    it('should test UnauthGuard behavior for logged in user', () => {
+      // Arrange - User logged in
+      sessionService.logIn(mockSessionInfo);
+
+      // Act
+      const canActivateResult = unauthGuard.canActivate();
+
+      // Assert
+      expect(canActivateResult).toBe(false);
+    });
+
+    it('should allow access to unauth routes when user is not logged in', () => {
+      // Arrange - User not logged in
+      sessionService.logOut();
+
+      // Act
+      const canActivateResult = unauthGuard.canActivate();
+
+      // Assert
+      expect(canActivateResult).toBe(true);
+    });
+  });
+
+  describe('Navigation State Management', () => {
+    it('should maintain authentication state during navigation', async () => {
+      // Arrange
+      sessionService.logIn(mockSessionInfo);
+
+      // Act - Navigate through multiple protected routes
+      await router.navigate(['/sessions']);
+      expect(location.path()).toBe('/sessions');
+      expect(sessionService.isLogged).toBe(true);
+
+      await router.navigate(['/me']);
+      expect(location.path()).toBe('/me');
+      expect(sessionService.isLogged).toBe(true);
+
+      // Assert - Session should be maintained throughout navigation
+      expect(sessionService.sessionInformation).toEqual(mockSessionInfo);
+    });
+
+    it('should handle logout and navigation correctly', async () => {
+      // Arrange
+      sessionService.logIn(mockSessionInfo);
+      await router.navigate(['/sessions']);
+      expect(location.path()).toBe('/sessions');
+
+      // Act - Logout
+      sessionService.logOut();
+
+      // Try to navigate to protected route after logout
+      await router.navigate(['/me']);
+
+      // Assert
+      expect(location.path()).toBe('/login');
+      expect(sessionService.isLogged).toBe(false);
+    });
+  });
+
+  describe('App Component Navigation Integration', () => {
+    let appComponent: AppComponent;
+
+    beforeEach(() => {
+      appComponent = fixture.componentInstance;
+      sessionService.logIn(mockSessionInfo);
+      fixture.detectChanges();
+    });
+
+    it('should handle logout through app component', async () => {
+      // Arrange
+      await router.navigate(['/sessions']);
+      expect(location.path()).toBe('/sessions');
+
+      // Act
+      appComponent.logout();
+
+      // Assert
+      expect(sessionService.isLogged).toBe(false);
+      expect(location.path()).toBe('/');
+    });
+
+    it('should reflect authentication state in app component', () => {
+      // Act
+      const isLoggedObservable = appComponent.$isLogged();
+
+      // Assert
+      isLoggedObservable.subscribe(isLogged => {
+        expect(isLogged).toBe(true);
+      });
+    });
+  });
+
+  describe('Complex Navigation Scenarios', () => {
+    it('should handle redirect after successful login', async () => {
+      // Arrange - Start unauthenticated
+      sessionService.logOut();
+
+      // Act - Try to access protected route (should redirect to login)
+      await router.navigate(['/sessions']);
+      expect(location.path()).toBe('/login');
+
+      // Simulate login
+      sessionService.logIn(mockSessionInfo);
+
+      // Navigate to originally intended route
+      await router.navigate(['/sessions']);
+
+      // Assert
+      expect(location.path()).toBe('/sessions');
+    });
+
+    it('should handle deep linking to protected routes', async () => {
+      // Arrange - User not logged in
+      sessionService.logOut();
+
+      // Act - Direct navigation to deep route
+      await router.navigate(['/sessions']);
+
+      // Assert - Should redirect to login
+      expect(location.path()).toBe('/login');
+
+      // After login, should be able to access the route
+      sessionService.logIn(mockSessionInfo);
+      await router.navigate(['/sessions']);
+      expect(location.path()).toBe('/sessions');
+    });
+
+    it('should handle navigation from one protected route to another', async () => {
+      // Arrange
+      sessionService.logIn(mockSessionInfo);
+      await router.navigate(['/sessions']);
+      expect(location.path()).toBe('/sessions');
+
+      // Act
+      await router.navigate(['/me']);
+
+      // Assert
+      expect(location.path()).toBe('/me');
+      expect(sessionService.isLogged).toBe(true);
+    });
+
+    it('should prevent access to auth routes when already logged in', async () => {
+      // Arrange
+      sessionService.logIn(mockSessionInfo);
+
+      // Act & Assert
+      await router.navigate(['/login']);
+      expect(location.path()).not.toBe('/login');
+
+      await router.navigate(['/register']);
+      expect(location.path()).not.toBe('/register');
+    });
+  });
+});
