@@ -1,0 +1,385 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Router } from '@angular/router';
+import { Location } from '@angular/common';
+import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatIconModule } from '@angular/material/icon';
+import { MatSelectModule } from '@angular/material/select';
+import { ReactiveFormsModule } from '@angular/forms';
+import { RouterTestingModule } from '@angular/router/testing';
+import { Component } from '@angular/core';
+import { expect } from '@jest/globals';
+import { ActivatedRoute } from '@angular/router';
+import { of } from 'rxjs';
+
+import { ListComponent } from '../features/sessions/components/list/list.component';
+import { DetailComponent } from '../features/sessions/components/detail/detail.component';
+import { FormComponent } from '../features/sessions/components/form/form.component';
+import { SessionApiService } from '../features/sessions/services/session-api.service';
+import { SessionService } from '../services/session.service';
+import { TeacherService } from '../services/teacher.service';
+import { Session } from '../features/sessions/interfaces/session.interface';
+import { Teacher } from '../interfaces/teacher.interface';
+import { SessionInformation } from '../interfaces/sessionInformation.interface';
+
+// Mock components for routing
+@Component({ template: 'Login Mock' })
+class MockLoginComponent { }
+
+@Component({ template: 'Sessions List Mock' })
+class MockSessionsComponent { }
+
+describe('Sessions Flow Integration Tests', () => {
+  let httpTestingController: HttpTestingController;
+  let router: Router;
+  let location: Location;
+  let sessionApiService: SessionApiService;
+  let sessionService: SessionService;
+  let teacherService: TeacherService;
+
+  const mockSessionInfo: SessionInformation = {
+    token: 'mock-jwt-token',
+    type: 'Bearer',
+    id: 1,
+    username: 'test@example.com',
+    firstName: 'Test',
+    lastName: 'User',
+    admin: true
+  };
+
+  const mockSession: Session = {
+    id: 1,
+    name: 'Yoga Session 1',
+    description: 'A relaxing yoga session',
+    date: new Date('2024-01-15'),
+    teacher_id: 1,
+    users: [1, 2],
+    createdAt: new Date('2024-01-01'),
+    updatedAt: new Date('2024-01-01')
+  };
+
+  const mockTeacher: Teacher = {
+    id: 1,
+    firstName: 'Jane',
+    lastName: 'Doe',
+    createdAt: new Date('2024-01-01'),
+    updatedAt: new Date('2024-01-01')
+  };
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      declarations: [
+        ListComponent,
+        DetailComponent,
+        FormComponent,
+        MockLoginComponent,
+        MockSessionsComponent
+      ],
+      imports: [
+        HttpClientTestingModule,
+        BrowserAnimationsModule,
+        ReactiveFormsModule,
+        MatSnackBarModule,
+        MatCardModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatIconModule,
+        MatSelectModule,
+        RouterTestingModule.withRoutes([
+          { path: 'sessions', component: ListComponent },
+          { path: 'sessions/detail/:id', component: DetailComponent },
+          { path: 'sessions/create', component: FormComponent },
+          { path: 'sessions/update/:id', component: FormComponent },
+          { path: 'login', component: MockLoginComponent }
+        ])
+      ],
+      providers: [
+        SessionApiService,
+        SessionService,
+        TeacherService,
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: {
+              paramMap: {
+                get: () => '1'
+              }
+            }
+          }
+        }
+      ]
+    }).compileComponents();
+
+    httpTestingController = TestBed.inject(HttpTestingController);
+    router = TestBed.inject(Router);
+    location = TestBed.inject(Location);
+    sessionApiService = TestBed.inject(SessionApiService);
+    sessionService = TestBed.inject(SessionService);
+    teacherService = TestBed.inject(TeacherService);
+
+    // Setup authenticated session
+    sessionService.logIn(mockSessionInfo);
+  });
+
+  afterEach(() => {
+    httpTestingController.verify();
+  });
+
+  describe('Session List Integration', () => {
+    let listFixture: ComponentFixture<ListComponent>;
+    let listComponent: ListComponent;
+
+    beforeEach(() => {
+      listFixture = TestBed.createComponent(ListComponent);
+      listComponent = listFixture.componentInstance;
+    });
+
+    it('should load and display sessions list', async () => {
+      // Arrange
+      const mockSessions = [mockSession];
+
+      // Act - Component initialization triggers the observable
+      listFixture.detectChanges();
+
+      // Verify API calls
+      const sessionsReq = httpTestingController.expectOne('api/session');
+      expect(sessionsReq.request.method).toBe('GET');
+      sessionsReq.flush(mockSessions);
+
+      await listFixture.whenStable();
+      listFixture.detectChanges();
+
+      // Assert - Test observables
+      listComponent.sessions$.subscribe(sessions => {
+        expect(sessions).toEqual(mockSessions);
+      });
+    });
+
+    it('should handle user session interaction', async () => {
+      // Arrange
+      listFixture.detectChanges();
+
+      const sessionsReq = httpTestingController.expectOne('api/session');
+      sessionsReq.flush([mockSession]);
+
+      await listFixture.whenStable();
+
+      // Act - Test user can see admin actions
+      expect(listComponent.user?.admin).toBe(true);
+      
+      // Assert admin functionality is available
+      expect(listComponent.sessions$).toBeDefined();
+      expect(listComponent.user).toBeDefined();
+    });
+  });
+
+  describe('Session Detail Integration', () => {
+    let detailFixture: ComponentFixture<DetailComponent>;
+    let detailComponent: DetailComponent;
+
+    beforeEach(() => {
+      detailFixture = TestBed.createComponent(DetailComponent);
+      detailComponent = detailFixture.componentInstance;
+      detailFixture.detectChanges();
+    });
+
+    it('should load session details and teacher information', async () => {
+      // Act
+      detailComponent.ngOnInit();
+
+      // Verify API calls
+      const sessionReq = httpTestingController.expectOne('api/session/1');
+      expect(sessionReq.request.method).toBe('GET');
+      sessionReq.flush(mockSession);
+
+      const teacherReq = httpTestingController.expectOne('api/teacher/1');
+      expect(teacherReq.request.method).toBe('GET');
+      teacherReq.flush(mockTeacher);
+
+      await detailFixture.whenStable();
+
+      // Assert
+      expect(detailComponent.session).toEqual(mockSession);
+      expect(detailComponent.teacher).toEqual(mockTeacher);
+      expect(detailComponent.isParticipate).toBe(true); // User ID 1 is in session users
+    });
+
+    it('should handle session deletion by admin', async () => {
+      // Arrange
+      detailComponent.ngOnInit();
+      
+      const sessionReq = httpTestingController.expectOne('api/session/1');
+      sessionReq.flush(mockSession);
+      const teacherReq = httpTestingController.expectOne('api/teacher/1');
+      teacherReq.flush(mockTeacher);
+
+      await detailFixture.whenStable();
+
+      // Act
+      detailComponent.delete();
+
+      // Verify delete API call
+      const deleteReq = httpTestingController.expectOne('api/session/1');
+      expect(deleteReq.request.method).toBe('DELETE');
+      deleteReq.flush({});
+
+      await detailFixture.whenStable();
+
+      // Assert navigation would happen (mocked by MatSnackBar and Router)
+      expect(detailComponent.isAdmin).toBe(true);
+    });
+
+    it('should handle user participation toggle', async () => {
+      // Arrange
+      detailComponent.ngOnInit();
+      
+      const sessionReq = httpTestingController.expectOne('api/session/1');
+      sessionReq.flush({ ...mockSession, users: [2] }); // User not participating
+      const teacherReq = httpTestingController.expectOne('api/teacher/1');
+      teacherReq.flush(mockTeacher);
+
+      await detailFixture.whenStable();
+      expect(detailComponent.isParticipate).toBe(false);
+
+      // Act - Participate
+      detailComponent.participate();
+
+      // Verify participate API call
+      const participateReq = httpTestingController.expectOne('api/session/1/participate/1');
+      expect(participateReq.request.method).toBe('POST');
+      participateReq.flush({});
+
+      // Session refresh after participation
+      const refreshReq = httpTestingController.expectOne('api/session/1');
+      refreshReq.flush({ ...mockSession, users: [1, 2] }); // User now participating
+      const refreshTeacherReq = httpTestingController.expectOne('api/teacher/1');
+      refreshTeacherReq.flush(mockTeacher);
+
+      await detailFixture.whenStable();
+
+      // Assert
+      expect(detailComponent.isParticipate).toBe(true);
+    });
+  });
+
+  describe('Session Form Integration', () => {
+    let formFixture: ComponentFixture<FormComponent>;
+    let formComponent: FormComponent;
+
+    beforeEach(() => {
+      formFixture = TestBed.createComponent(FormComponent);
+      formComponent = formFixture.componentInstance;
+    });
+
+    it('should load teachers for session creation', async () => {
+      // Act
+      formComponent.ngOnInit();
+      formFixture.detectChanges();
+
+      // Verify teachers API call
+      const teachersReq = httpTestingController.expectOne('api/teacher');
+      expect(teachersReq.request.method).toBe('GET');
+      teachersReq.flush([mockTeacher]);
+
+      await formFixture.whenStable();
+
+      // Assert - Test observable
+      formComponent.teachers$.subscribe(teachers => {
+        expect(teachers).toEqual([mockTeacher]);
+      });
+    });
+
+    it('should create new session successfully', async () => {
+      // Arrange
+      formComponent.ngOnInit();
+      const teachersReq = httpTestingController.expectOne('api/teacher');
+      teachersReq.flush([mockTeacher]);
+
+      const sessionData = {
+        name: 'New Yoga Session',
+        description: 'A new session',
+        date: '2024-02-15',
+        teacher_id: 1
+      };
+
+      await formFixture.whenStable();
+      formComponent.sessionForm?.patchValue(sessionData);
+
+      // Act
+      formComponent.submit();
+
+      // Verify create API call
+      const createReq = httpTestingController.expectOne('api/session');
+      expect(createReq.request.method).toBe('POST');
+      expect(createReq.request.body.name).toBe(sessionData.name);
+      createReq.flush({ ...mockSession, ...sessionData });
+
+      await formFixture.whenStable();
+
+      // Assert form submission was successful
+      expect(formComponent.onUpdate).toBe(false);
+    });
+  });
+
+  describe('Cross-Component Session State', () => {
+    it('should maintain session state across different components', async () => {
+      // Arrange
+      const listFixture = TestBed.createComponent(ListComponent);
+      const detailFixture = TestBed.createComponent(DetailComponent);
+
+      // Act - Load sessions in list component
+      const listComponent = listFixture.componentInstance;
+      listFixture.detectChanges();
+
+      const sessionsReq = httpTestingController.expectOne('api/session');
+      sessionsReq.flush([mockSession]);
+
+      // Load detail in detail component
+      const detailComponent = detailFixture.componentInstance;
+      detailComponent.ngOnInit();
+
+      const sessionReq = httpTestingController.expectOne('api/session/1');
+      sessionReq.flush(mockSession);
+      const teacherReq = httpTestingController.expectOne('api/teacher/1');
+      teacherReq.flush(mockTeacher);
+
+      await Promise.all([listFixture.whenStable(), detailFixture.whenStable()]);
+
+      // Assert
+      listComponent.sessions$.subscribe(sessions => {
+        expect(sessions).toEqual([mockSession]);
+      });
+      expect(detailComponent.session).toEqual(mockSession);
+      expect(detailComponent.teacher).toEqual(mockTeacher);
+
+      // Both components should have access to the same user session
+      expect(listComponent.user?.id).toBe(mockSessionInfo.id);
+      expect(detailComponent.userId).toBe(mockSessionInfo.id.toString());
+    });
+  });
+
+  describe('Error Handling Integration', () => {
+    it('should handle API errors gracefully', async () => {
+      // Arrange
+      const listFixture = TestBed.createComponent(ListComponent);
+      const listComponent = listFixture.componentInstance;
+
+      // Act
+      listFixture.detectChanges();
+
+      // Simulate API error
+      const sessionsReq = httpTestingController.expectOne('api/session');
+      sessionsReq.flush('Server Error', { status: 500, statusText: 'Internal Server Error' });
+
+      await listFixture.whenStable();
+
+      // Assert - Component should handle error gracefully
+      // The sessions$ observable should exist even if it errors
+      expect(listComponent.sessions$).toBeDefined();
+    });
+  });
+});

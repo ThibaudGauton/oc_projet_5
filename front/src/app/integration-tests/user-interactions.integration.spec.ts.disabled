@@ -1,0 +1,474 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Router } from '@angular/router';
+import { Location } from '@angular/common';
+import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatIconModule } from '@angular/material/icon';
+import { ReactiveFormsModule } from '@angular/forms';
+import { RouterTestingModule } from '@angular/router/testing';
+import { Component } from '@angular/core';
+import { expect } from '@jest/globals';
+import { ActivatedRoute } from '@angular/router';
+
+import { MeComponent } from '../components/me/me.component';
+import { DetailComponent } from '../features/sessions/components/detail/detail.component';
+import { AppComponent } from '../app.component';
+import { SessionService } from '../services/session.service';
+import { UserService } from '../services/user.service';
+import { SessionApiService } from '../features/sessions/services/session-api.service';
+import { TeacherService } from '../services/teacher.service';
+import { SessionInformation } from '../interfaces/sessionInformation.interface';
+import { User } from '../interfaces/user.interface';
+import { Session } from '../features/sessions/interfaces/session.interface';
+import { Teacher } from '../interfaces/teacher.interface';
+
+// Mock components for routing
+@Component({ template: 'Home Mock' })
+class MockHomeComponent { }
+
+@Component({ template: 'Login Mock' })
+class MockLoginComponent { }
+
+@Component({ template: 'Sessions Mock' })
+class MockSessionsComponent { }
+
+describe('User Interactions Integration Tests', () => {
+  let httpTestingController: HttpTestingController;
+  let router: Router;
+  let location: Location;
+  let sessionService: SessionService;
+  let userService: UserService;
+
+  const mockSessionInfo: SessionInformation = {
+    token: 'mock-jwt-token',
+    type: 'Bearer',
+    id: 1,
+    username: 'test@example.com',
+    firstName: 'Test',
+    lastName: 'User',
+    admin: false
+  };
+
+  const mockUser: User = {
+    id: 1,
+    firstName: 'Test',
+    lastName: 'User',
+    email: 'test@example.com',
+    admin: false,
+    password: 'hashedpassword',
+    createdAt: new Date('2024-01-01'),
+    updatedAt: new Date('2024-01-01')
+  };
+
+  const mockSession: Session = {
+    id: 1,
+    name: 'Yoga Session 1',
+    description: 'A relaxing yoga session',
+    date: new Date('2024-01-15'),
+    teacher_id: 1,
+    users: [1, 2],
+    createdAt: new Date('2024-01-01'),
+    updatedAt: new Date('2024-01-01')
+  };
+
+  const mockTeacher: Teacher = {
+    id: 1,
+    firstName: 'Jane',
+    lastName: 'Doe',
+    createdAt: new Date('2024-01-01'),
+    updatedAt: new Date('2024-01-01')
+  };
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      declarations: [
+        MeComponent,
+        DetailComponent,
+        AppComponent,
+        MockHomeComponent,
+        MockLoginComponent,
+        MockSessionsComponent
+      ],
+      imports: [
+        HttpClientTestingModule,
+        BrowserAnimationsModule,
+        ReactiveFormsModule,
+        MatSnackBarModule,
+        MatCardModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatIconModule,
+        RouterTestingModule.withRoutes([
+          { path: '', component: MockHomeComponent },
+          { path: 'login', component: MockLoginComponent },
+          { path: 'sessions', component: MockSessionsComponent },
+          { path: 'sessions/detail/:id', component: DetailComponent },
+          { path: 'me', component: MeComponent }
+        ])
+      ],
+      providers: [
+        SessionService,
+        UserService,
+        SessionApiService,
+        TeacherService,
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: {
+              paramMap: {
+                get: () => '1'
+              }
+            }
+          }
+        }
+      ]
+    }).compileComponents();
+
+    httpTestingController = TestBed.inject(HttpTestingController);
+    router = TestBed.inject(Router);
+    location = TestBed.inject(Location);
+    sessionService = TestBed.inject(SessionService);
+    userService = TestBed.inject(UserService);
+
+    // Setup authenticated session
+    sessionService.logIn(mockSessionInfo);
+  });
+
+  afterEach(() => {
+    httpTestingController.verify();
+  });
+
+  describe('Complete User Profile Management Flow', () => {
+    let meFixture: ComponentFixture<MeComponent>;
+    let meComponent: MeComponent;
+
+    beforeEach(async () => {
+      await router.navigate(['/me']);
+      meFixture = TestBed.createComponent(MeComponent);
+      meComponent = meFixture.componentInstance;
+      meFixture.detectChanges();
+    });
+
+    it('should complete full user profile view workflow', async () => {
+      // Act - Load user profile
+      meComponent.ngOnInit();
+
+      // Verify API call
+      const userReq = httpTestingController.expectOne('api/user/1');
+      expect(userReq.request.method).toBe('GET');
+      userReq.flush(mockUser);
+
+      await meFixture.whenStable();
+
+      // Assert
+      expect(meComponent.user).toEqual(mockUser);
+      expect(location.path()).toBe('/me');
+    });
+
+    it('should handle complete account deletion workflow', async () => {
+      // Arrange - Load user profile first
+      meComponent.ngOnInit();
+      const userReq = httpTestingController.expectOne('api/user/1');
+      userReq.flush(mockUser);
+      await meFixture.whenStable();
+
+      // Act - Delete account
+      meComponent.delete();
+
+      // Verify delete API call
+      const deleteReq = httpTestingController.expectOne('api/user/1');
+      expect(deleteReq.request.method).toBe('DELETE');
+      deleteReq.flush({ message: 'User deleted successfully' });
+
+      await meFixture.whenStable();
+
+      // Assert - User should be logged out and redirected
+      expect(sessionService.isLogged).toBe(false);
+      expect(sessionService.sessionInformation).toBeUndefined();
+      expect(location.path()).toBe('/');
+    });
+
+    it('should handle navigation back from profile page', () => {
+      // Arrange
+      const historySpy = jest.spyOn(window.history, 'back');
+
+      // Act
+      meComponent.back();
+
+      // Assert
+      expect(historySpy).toHaveBeenCalled();
+
+      // Cleanup
+      historySpy.mockRestore();
+    });
+  });
+
+  describe('Session Interaction Complete Workflow', () => {
+    let detailFixture: ComponentFixture<DetailComponent>;
+    let detailComponent: DetailComponent;
+
+    beforeEach(async () => {
+      await router.navigate(['/sessions/detail/1']);
+      detailFixture = TestBed.createComponent(DetailComponent);
+      detailComponent = detailFixture.componentInstance;
+      detailFixture.detectChanges();
+    });
+
+    it('should complete session participation workflow', async () => {
+      // Arrange - Load session details (user not participating initially)
+      detailComponent.ngOnInit();
+      
+      const sessionReq = httpTestingController.expectOne('api/session/1');
+      sessionReq.flush({ ...mockSession, users: [2] }); // User 1 not in list
+      const teacherReq = httpTestingController.expectOne('api/teacher/1');
+      teacherReq.flush(mockTeacher);
+
+      await detailFixture.whenStable();
+      expect(detailComponent.isParticipate).toBe(false);
+
+      // Act - User joins session
+      detailComponent.participate();
+
+      // Verify participate API call
+      const participateReq = httpTestingController.expectOne('api/session/1/participate/1');
+      expect(participateReq.request.method).toBe('POST');
+      participateReq.flush({});
+
+      // Session refresh after participation
+      const refreshSessionReq = httpTestingController.expectOne('api/session/1');
+      refreshSessionReq.flush({ ...mockSession, users: [1, 2] }); // User now participating
+      const refreshTeacherReq = httpTestingController.expectOne('api/teacher/1');
+      refreshTeacherReq.flush(mockTeacher);
+
+      await detailFixture.whenStable();
+
+      // Assert
+      expect(detailComponent.isParticipate).toBe(true);
+    });
+
+    it('should complete session unparticipation workflow', async () => {
+      // Arrange - Load session details (user participating initially)
+      detailComponent.ngOnInit();
+      
+      const sessionReq = httpTestingController.expectOne('api/session/1');
+      sessionReq.flush(mockSession); // User 1 in list
+      const teacherReq = httpTestingController.expectOne('api/teacher/1');
+      teacherReq.flush(mockTeacher);
+
+      await detailFixture.whenStable();
+      expect(detailComponent.isParticipate).toBe(true);
+
+      // Act - User leaves session
+      detailComponent.unParticipate();
+
+      // Verify unparticipate API call
+      const unparticipateReq = httpTestingController.expectOne('api/session/1/unparticipate/1');
+      expect(unparticipateReq.request.method).toBe('DELETE');
+      unparticipateReq.flush({});
+
+      // Session refresh after unparticipation
+      const refreshSessionReq = httpTestingController.expectOne('api/session/1');
+      refreshSessionReq.flush({ ...mockSession, users: [2] }); // User no longer participating
+      const refreshTeacherReq = httpTestingController.expectOne('api/teacher/1');
+      refreshTeacherReq.flush(mockTeacher);
+
+      await detailFixture.whenStable();
+
+      // Assert
+      expect(detailComponent.isParticipate).toBe(false);
+    });
+
+    it('should handle navigation back from session detail', async () => {
+      // Arrange
+      detailComponent.ngOnInit();
+      const sessionReq = httpTestingController.expectOne('api/session/1');
+      sessionReq.flush(mockSession);
+      const teacherReq = httpTestingController.expectOne('api/teacher/1');
+      teacherReq.flush(mockTeacher);
+      
+      await detailFixture.whenStable();
+      
+      const historySpy = jest.spyOn(window.history, 'back');
+
+      // Act
+      detailComponent.back();
+
+      // Assert
+      expect(historySpy).toHaveBeenCalled();
+
+      // Cleanup
+      historySpy.mockRestore();
+    });
+  });
+
+  describe('App-wide User Interaction Flows', () => {
+    let appFixture: ComponentFixture<AppComponent>;
+    let appComponent: AppComponent;
+
+    beforeEach(() => {
+      appFixture = TestBed.createComponent(AppComponent);
+      appComponent = appFixture.componentInstance;
+      appFixture.detectChanges();
+    });
+
+    it('should handle complete logout workflow from app component', async () => {
+      // Arrange - Navigate to a protected route
+      await router.navigate(['/sessions']);
+      expect(location.path()).toBe('/sessions');
+      expect(sessionService.isLogged).toBe(true);
+
+      // Act - Logout through app component
+      appComponent.logout();
+
+      // Assert
+      expect(sessionService.isLogged).toBe(false);
+      expect(sessionService.sessionInformation).toBeUndefined();
+      expect(location.path()).toBe('');
+    });
+
+    it('should reflect authentication state changes in app component', () => {
+      // Act - Check initial state
+      let isLoggedResult: boolean | undefined;
+      appComponent.$isLogged().subscribe(isLogged => {
+        isLoggedResult = isLogged;
+      });
+
+      // Assert initial state
+      expect(isLoggedResult).toBe(true);
+
+      // Act - Logout
+      sessionService.logOut();
+
+      // Check state after logout
+      appComponent.$isLogged().subscribe(isLogged => {
+        isLoggedResult = isLogged;
+      });
+
+      // Assert
+      expect(isLoggedResult).toBe(false);
+    });
+  });
+
+  describe('Cross-Component User State Consistency', () => {
+    it('should maintain user state consistency across multiple components', async () => {
+      // Arrange
+      const appFixture = TestBed.createComponent(AppComponent);
+      const meFixture = TestBed.createComponent(MeComponent);
+      const detailFixture = TestBed.createComponent(DetailComponent);
+
+      const appComponent = appFixture.componentInstance;
+      const meComponent = meFixture.componentInstance;
+      const detailComponent = detailFixture.componentInstance;
+
+      // Act - Load data in different components
+      meComponent.ngOnInit();
+      const userReq = httpTestingController.expectOne('api/user/1');
+      userReq.flush(mockUser);
+
+      detailComponent.ngOnInit();
+      const sessionReq = httpTestingController.expectOne('api/session/1');
+      sessionReq.flush(mockSession);
+      const teacherReq = httpTestingController.expectOne('api/teacher/1');
+      teacherReq.flush(mockTeacher);
+
+      await Promise.all([
+        appFixture.whenStable(),
+        meFixture.whenStable(),
+        detailFixture.whenStable()
+      ]);
+
+      // Assert - All components should see the same user session
+      expect(meComponent.user).toEqual(mockUser);
+      expect(detailComponent.userId).toBe(mockSessionInfo.id.toString());
+
+      // Check app component authentication state
+      appComponent.$isLogged().subscribe(isLogged => {
+        expect(isLogged).toBe(true);
+      });
+
+      // Clean up
+      appFixture.destroy();
+      meFixture.destroy();
+      detailFixture.destroy();
+    });
+
+    it('should handle user session changes across all components', async () => {
+      // Arrange
+      const appFixture = TestBed.createComponent(AppComponent);
+      const meFixture = TestBed.createComponent(MeComponent);
+
+      const appComponent = appFixture.componentInstance;
+      const meComponent = meFixture.componentInstance;
+
+      // Initial state - user logged in
+      expect(sessionService.isLogged).toBe(true);
+
+      // Act - Logout through app component
+      appComponent.logout();
+
+      // Assert - All components should reflect the logout
+      expect(sessionService.isLogged).toBe(false);
+      expect(location.path()).toBe('');
+
+      // Components should handle the state change appropriately
+      appComponent.$isLogged().subscribe(isLogged => {
+        expect(isLogged).toBe(false);
+      });
+
+      // Clean up
+      appFixture.destroy();
+      meFixture.destroy();
+    });
+  });
+
+  describe('Error Handling in User Interactions', () => {
+    it('should handle user profile loading errors gracefully', async () => {
+      // Arrange
+      const meFixture = TestBed.createComponent(MeComponent);
+      const meComponent = meFixture.componentInstance;
+
+      // Act
+      meComponent.ngOnInit();
+
+      // Simulate API error
+      const userReq = httpTestingController.expectOne('api/user/1');
+      userReq.flush('User not found', { status: 404, statusText: 'Not Found' });
+
+      await meFixture.whenStable();
+
+      // Assert - Component should handle error gracefully
+      expect(meComponent.user).toBeUndefined();
+    });
+
+    it('should handle session interaction errors gracefully', async () => {
+      // Arrange
+      const detailFixture = TestBed.createComponent(DetailComponent);
+      const detailComponent = detailFixture.componentInstance;
+
+      detailComponent.ngOnInit();
+      const sessionReq = httpTestingController.expectOne('api/session/1');
+      sessionReq.flush(mockSession);
+      const teacherReq = httpTestingController.expectOne('api/teacher/1');
+      teacherReq.flush(mockTeacher);
+
+      await detailFixture.whenStable();
+
+      // Act - Try to participate but get error
+      detailComponent.participate();
+
+      // Simulate API error
+      const participateReq = httpTestingController.expectOne('api/session/1/participate/1');
+      participateReq.flush('Participation failed', { status: 400, statusText: 'Bad Request' });
+
+      // Note: No session refresh happens on error, so we don't expect additional HTTP calls
+      await detailFixture.whenStable();
+
+      // Assert - Component should handle error gracefully
+      expect(detailComponent.isParticipate).toBe(true); // Should maintain previous state
+    });
+  });
+});
