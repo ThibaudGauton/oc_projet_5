@@ -1,6 +1,6 @@
 {
   "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/polyfills.ts": {
-    "path": "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/polyfills.ts",
+    "path": "/home/tgauton/project/cours/Testez-une-application-full-stack/front/src/polyfills.ts",
     "statementMap": {},
     "fnMap": {},
     "branchMap": {},
@@ -23,7 +23,7 @@
     "hash": "9a3b81ed204555d90d1659e7f003a554453c5c8b"
   },
   "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/app/services/session.service.ts": {
-    "path": "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/app/services/session.service.ts",
+    "path": "/home/tgauton/project/cours/Testez-une-application-full-stack/front/src/app/services/session.service.ts",
     "statementMap": {
       "0": {
         "start": {
@@ -448,7 +448,7 @@
     "hash": "1c7580cd9bc2570f9011ad5aeff0fc893b7f5689"
   },
   "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/app/services/user.service.ts": {
-    "path": "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/app/services/user.service.ts",
+    "path": "/home/tgauton/project/cours/Testez-une-application-full-stack/front/src/app/services/user.service.ts",
     "statementMap": {
       "0": {
         "start": {
@@ -753,7 +753,7 @@
     "hash": "c92e30d6390e2a3675b6f727ab47ea1437227f9e"
   },
   "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/app/components/me/me.component.ts": {
-    "path": "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/app/components/me/me.component.ts",
+    "path": "/home/tgauton/project/cours/Testez-une-application-full-stack/front/src/app/components/me/me.component.ts",
     "statementMap": {
       "0": {
         "start": {
@@ -2412,7 +2412,7 @@
     "hash": "cd1ce72cda39fe70df79d86da34755fc5b7e0d2b"
   },
   "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/app/components/not-found/not-found.component.ts": {
-    "path": "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/app/components/not-found/not-found.component.ts",
+    "path": "/home/tgauton/project/cours/Testez-une-application-full-stack/front/src/app/components/not-found/not-found.component.ts",
     "statementMap": {
       "0": {
         "start": {
@@ -2705,7 +2705,7 @@
     "hash": "fb1db802cda7c85e5a5621a8c60eef41cbe301d2"
   },
   "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/app/guards/auth.guard.ts": {
-    "path": "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/app/guards/auth.guard.ts",
+    "path": "/home/tgauton/project/cours/Testez-une-application-full-stack/front/src/app/guards/auth.guard.ts",
     "statementMap": {
       "0": {
         "start": {
@@ -3047,7 +3047,7 @@
     "hash": "2346bd7b83dc6466475cd81a46141c16bc2bec67"
   },
   "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/app/guards/unauth.guard.ts": {
-    "path": "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/app/guards/unauth.guard.ts",
+    "path": "/home/tgauton/project/cours/Testez-une-application-full-stack/front/src/app/guards/unauth.guard.ts",
     "statementMap": {
       "0": {
         "start": {
@@ -3389,7 +3389,7 @@
     "hash": "5b8da90e39f22933f4fa8fd881d7fc357bae7576"
   },
   "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/app/app-routing.module.ts": {
-    "path": "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/app/app-routing.module.ts",
+    "path": "/home/tgauton/project/cours/Testez-une-application-full-stack/front/src/app/app-routing.module.ts",
     "statementMap": {
       "0": {
         "start": {
@@ -3747,7 +3747,7 @@
     "hash": "75882c59e0ba1deb60c90d44def4d81b31f6902b"
   },
   "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/app/features/auth/services/auth.service.ts": {
-    "path": "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/app/features/auth/services/auth.service.ts",
+    "path": "/home/tgauton/project/cours/Testez-une-application-full-stack/front/src/app/features/auth/services/auth.service.ts",
     "statementMap": {
       "0": {
         "start": {
@@ -4053,7 +4053,7 @@
     "hash": "9d5ec93e8ac0d6ccfb1c34b169de605b7b354f1a"
   },
   "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/app/app.component.ts": {
-    "path": "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/app/app.component.ts",
+    "path": "/home/tgauton/project/cours/Testez-une-application-full-stack/front/src/app/app.component.ts",
     "statementMap": {
       "0": {
         "start": {
@@ -5054,7 +5054,7 @@
     "hash": "a0b025bc8a7a905de33180a3ffc6bee8b727add4"
   },
   "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/app/interceptors/jwt.interceptor.ts": {
-    "path": "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/app/interceptors/jwt.interceptor.ts",
+    "path": "/home/tgauton/project/cours/Testez-une-application-full-stack/front/src/app/interceptors/jwt.interceptor.ts",
     "statementMap": {
       "0": {
         "start": {
@@ -5381,7 +5381,7 @@
     "hash": "b8fe7a2b4606d34c9e34046a6168eb10b739bd91"
   },
   "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/app/app.module.ts": {
-    "path": "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/app/app.module.ts",
+    "path": "/home/tgauton/project/cours/Testez-une-application-full-stack/front/src/app/app.module.ts",
     "statementMap": {
       "0": {
         "start": {
@@ -5598,7 +5598,7 @@
     "hash": "a6e698b4c5d51521d451569e045fa650a0352018"
   },
   "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/environments/environment.ts": {
-    "path": "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/environments/environment.ts",
+    "path": "/home/tgauton/project/cours/Testez-une-application-full-stack/front/src/environments/environment.ts",
     "statementMap": {
       "0": {
         "start": {
@@ -5638,7 +5638,7 @@
     "hash": "bb9194866a829376438d80f96707aeddc8f5ff60"
   },
   "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/main.ts": {
-    "path": "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/main.ts",
+    "path": "/home/tgauton/project/cours/Testez-une-application-full-stack/front/src/main.ts",
     "statementMap": {
       "0": {
         "start": {
@@ -5787,7 +5787,7 @@
     "hash": "4a6fc756c5eab4a652a40ac79e03ba54c4d35c88"
   },
   "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/app/features/auth/components/login/login.component.ts": {
-    "path": "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/app/features/auth/components/login/login.component.ts",
+    "path": "/home/tgauton/project/cours/Testez-une-application-full-stack/front/src/app/features/auth/components/login/login.component.ts",
     "statementMap": {
       "0": {
         "start": {
@@ -6967,7 +6967,7 @@
     "hash": "0f72f0c15c34fb65167da907c2a5dc61f48c42de"
   },
   "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/app/features/auth/components/register/register.component.ts": {
-    "path": "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/app/features/auth/components/register/register.component.ts",
+    "path": "/home/tgauton/project/cours/Testez-une-application-full-stack/front/src/app/features/auth/components/register/register.component.ts",
     "statementMap": {
       "0": {
         "start": {
@@ -7955,7 +7955,7 @@
     "hash": "993ead6b15608357c11d8b4c96f877374374b8b2"
   },
   "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/app/features/auth/auth-routing.module.ts": {
-    "path": "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/app/features/auth/auth-routing.module.ts",
+    "path": "/home/tgauton/project/cours/Testez-une-application-full-stack/front/src/app/features/auth/auth-routing.module.ts",
     "statementMap": {
       "0": {
         "start": {
@@ -8161,7 +8161,7 @@
     "hash": "5f99d4e85e42c81bb488846d88df0e0ccca7405d"
   },
   "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/app/features/auth/auth.module.ts": {
-    "path": "/Users/joffreyhernandez/Repository/OC/parcours-Angular_Java/P5-Full-Stack-testing/front/src/app/features/auth/auth.module.ts",
+    "path": "/home/tgauton/project/cours/Testez-une-application-full-stack/front/src/app/features/auth/auth.module.ts",
     "statementMap": {
       "0": {
         "start": {

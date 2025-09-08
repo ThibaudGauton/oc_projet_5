@@ -21,6 +21,10 @@ export class AppComponent {
     return this.sessionService.$isLogged();
   }
 
+  public get sessionInformation(): SessionInformation | undefined {
+    return this.sessionService.sessionInformation;
+  }
+
   public logout(): void {
     this.sessionService.logOut();
     this.router.navigate([''])

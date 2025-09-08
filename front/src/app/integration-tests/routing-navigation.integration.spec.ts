@@ -2,9 +2,13 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { Component } from '@angular/core';
+import { Component, NgZone, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { expect } from '@jest/globals';
 import { RouterTestingModule } from '@angular/router/testing';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 
 import { AppComponent } from '../app.component';
 import { AuthGuard } from '../guards/auth.guard';
@@ -39,6 +43,7 @@ describe('Routing and Navigation Integration Tests', () => {
   let authGuard: AuthGuard;
   let unauthGuard: UnauthGuard;
   let fixture: ComponentFixture<AppComponent>;
+  let ngZone: NgZone;
 
   const mockSessionInfo: SessionInformation = {
     token: 'mock-jwt-token',
@@ -63,16 +68,21 @@ describe('Routing and Navigation Integration Tests', () => {
       ],
       imports: [
         HttpClientTestingModule,
+        BrowserAnimationsModule,
+        MatToolbarModule,
+        MatIconModule,
+        MatButtonModule,
         RouterTestingModule.withRoutes([
           { path: '', component: MockHomeComponent },
-          { path: 'login', component: MockLoginComponent },
-          { path: 'register', component: MockRegisterComponent },
+          { path: 'login', component: MockLoginComponent, canActivate: [UnauthGuard] },
+          { path: 'register', component: MockRegisterComponent, canActivate: [UnauthGuard] },
           { path: 'sessions', component: MockSessionsComponent, canActivate: [AuthGuard] },
           { path: 'me', component: MockMeComponent, canActivate: [AuthGuard] },
           { path: '404', component: NotFoundComponent },
           { path: '**', redirectTo: '404' }
         ])
       ],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA],
       providers: [
         SessionService,
         AuthGuard,
@@ -86,6 +96,7 @@ describe('Routing and Navigation Integration Tests', () => {
     sessionService = TestBed.inject(SessionService);
     authGuard = TestBed.inject(AuthGuard);
     unauthGuard = TestBed.inject(UnauthGuard);
+    ngZone = TestBed.inject(NgZone);
 
     fixture.detectChanges();
   });
@@ -98,7 +109,7 @@ describe('Routing and Navigation Integration Tests', () => {
 
     it('should redirect to login when accessing protected routes without authentication', async () => {
       // Act - Try to navigate to protected route
-      await router.navigate(['/sessions']);
+      await ngZone.run(() => router.navigate(['/sessions']));
 
       // Assert
       expect(location.path()).toBe('/login');
@@ -106,7 +117,7 @@ describe('Routing and Navigation Integration Tests', () => {
 
     it('should redirect to login when accessing me page without authentication', async () => {
       // Act
-      await router.navigate(['/me']);
+      await ngZone.run(() => router.navigate(['/me']));
 
       // Assert
       expect(location.path()).toBe('/login');
@@ -114,7 +125,7 @@ describe('Routing and Navigation Integration Tests', () => {
 
     it('should allow navigation to login page', async () => {
       // Act
-      await router.navigate(['/login']);
+      await ngZone.run(() => router.navigate(['/login']));
 
       // Assert
       expect(location.path()).toBe('/login');
@@ -122,7 +133,7 @@ describe('Routing and Navigation Integration Tests', () => {
 
     it('should allow navigation to register page', async () => {
       // Act
-      await router.navigate(['/register']);
+      await ngZone.run(() => router.navigate(['/register']));
 
       // Assert
       expect(location.path()).toBe('/register');
@@ -130,7 +141,7 @@ describe('Routing and Navigation Integration Tests', () => {
 
     it('should navigate to 404 page for invalid routes', async () => {
       // Act
-      await router.navigate(['/invalid-route']);
+      await ngZone.run(() => router.navigate(['/invalid-route']));
 
       // Assert
       expect(location.path()).toBe('/404');
@@ -145,7 +156,7 @@ describe('Routing and Navigation Integration Tests', () => {
 
     it('should allow access to sessions page when authenticated', async () => {
       // Act
-      await router.navigate(['/sessions']);
+      await ngZone.run(() => router.navigate(['/sessions']));
 
       // Assert
       expect(location.path()).toBe('/sessions');
@@ -153,7 +164,7 @@ describe('Routing and Navigation Integration Tests', () => {
 
     it('should allow access to me page when authenticated', async () => {
       // Act
-      await router.navigate(['/me']);
+      await ngZone.run(() => router.navigate(['/me']));
 
       // Assert
       expect(location.path()).toBe('/me');
@@ -161,18 +172,18 @@ describe('Routing and Navigation Integration Tests', () => {
 
     it('should redirect authenticated user away from login page', async () => {
       // Act
-      await router.navigate(['/login']);
+      await ngZone.run(() => router.navigate(['/login']));
 
-      // Assert - Should redirect to sessions or home based on UnauthGuard logic
-      expect(location.path()).not.toBe('/login');
+      // Assert - Should redirect to 404 since 'rentals' route doesn't exist
+      expect(location.path()).toBe('/404');
     });
 
     it('should redirect authenticated user away from register page', async () => {
       // Act
-      await router.navigate(['/register']);
+      await ngZone.run(() => router.navigate(['/register']));
 
       // Assert
-      expect(location.path()).not.toBe('/register');
+      expect(location.path()).toBe('/404');
     });
   });
 
@@ -228,11 +239,11 @@ describe('Routing and Navigation Integration Tests', () => {
       sessionService.logIn(mockSessionInfo);
 
       // Act - Navigate through multiple protected routes
-      await router.navigate(['/sessions']);
+      await ngZone.run(() => router.navigate(['/sessions']));
       expect(location.path()).toBe('/sessions');
       expect(sessionService.isLogged).toBe(true);
 
-      await router.navigate(['/me']);
+      await ngZone.run(() => router.navigate(['/me']));
       expect(location.path()).toBe('/me');
       expect(sessionService.isLogged).toBe(true);
 
@@ -243,14 +254,14 @@ describe('Routing and Navigation Integration Tests', () => {
     it('should handle logout and navigation correctly', async () => {
       // Arrange
       sessionService.logIn(mockSessionInfo);
-      await router.navigate(['/sessions']);
+      await ngZone.run(() => router.navigate(['/sessions']));
       expect(location.path()).toBe('/sessions');
 
       // Act - Logout
       sessionService.logOut();
 
       // Try to navigate to protected route after logout
-      await router.navigate(['/me']);
+      await ngZone.run(() => router.navigate(['/me']));
 
       // Assert
       expect(location.path()).toBe('/login');
@@ -269,11 +280,11 @@ describe('Routing and Navigation Integration Tests', () => {
 
     it('should handle logout through app component', async () => {
       // Arrange
-      await router.navigate(['/sessions']);
+      await ngZone.run(() => router.navigate(['/sessions']));
       expect(location.path()).toBe('/sessions');
 
       // Act
-      appComponent.logout();
+      await ngZone.run(() => appComponent.logout());
 
       // Assert
       expect(sessionService.isLogged).toBe(false);
@@ -297,14 +308,14 @@ describe('Routing and Navigation Integration Tests', () => {
       sessionService.logOut();
 
       // Act - Try to access protected route (should redirect to login)
-      await router.navigate(['/sessions']);
+      await ngZone.run(() => router.navigate(['/sessions']));
       expect(location.path()).toBe('/login');
 
       // Simulate login
       sessionService.logIn(mockSessionInfo);
 
       // Navigate to originally intended route
-      await router.navigate(['/sessions']);
+      await ngZone.run(() => router.navigate(['/sessions']));
 
       // Assert
       expect(location.path()).toBe('/sessions');
@@ -315,25 +326,25 @@ describe('Routing and Navigation Integration Tests', () => {
       sessionService.logOut();
 
       // Act - Direct navigation to deep route
-      await router.navigate(['/sessions']);
+      await ngZone.run(() => router.navigate(['/sessions']));
 
       // Assert - Should redirect to login
       expect(location.path()).toBe('/login');
 
       // After login, should be able to access the route
       sessionService.logIn(mockSessionInfo);
-      await router.navigate(['/sessions']);
+      await ngZone.run(() => router.navigate(['/sessions']));
       expect(location.path()).toBe('/sessions');
     });
 
     it('should handle navigation from one protected route to another', async () => {
       // Arrange
       sessionService.logIn(mockSessionInfo);
-      await router.navigate(['/sessions']);
+      await ngZone.run(() => router.navigate(['/sessions']));
       expect(location.path()).toBe('/sessions');
 
       // Act
-      await router.navigate(['/me']);
+      await ngZone.run(() => router.navigate(['/me']));
 
       // Assert
       expect(location.path()).toBe('/me');
@@ -345,11 +356,11 @@ describe('Routing and Navigation Integration Tests', () => {
       sessionService.logIn(mockSessionInfo);
 
       // Act & Assert
-      await router.navigate(['/login']);
-      expect(location.path()).not.toBe('/login');
+      await ngZone.run(() => router.navigate(['/login']));
+      expect(location.path()).toBe('/404');
 
-      await router.navigate(['/register']);
-      expect(location.path()).not.toBe('/register');
+      await ngZone.run(() => router.navigate(['/register']));
+      expect(location.path()).toBe('/404');
     });
   });
 });
