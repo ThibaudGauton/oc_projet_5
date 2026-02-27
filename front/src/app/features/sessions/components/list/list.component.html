@@ -2,7 +2,7 @@
   <mat-card>
     <mat-card-header fxLayout="row" fxLayoutAlign="space-between center">
       <mat-card-title class="m0">Rentals available</mat-card-title>
-      <button *ngIf="user!.admin" mat-raised-button color="primary" routerLink="create">
+      <button *ngIf="user!.admin" mat-raised-button color="primary" routerLink="create" data-cy="create-session-button">
         <mat-icon>add</mat-icon>
         <span class="ml1">Create</span>
       </button>

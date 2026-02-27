@@ -2,7 +2,7 @@
   <mat-card>
     <mat-card-title>
       <div fxLayout="row" fxLayoutAlign="start center">
-        <button mat-icon-button (click)="back()">
+        <button mat-icon-button (click)="back()" data-cy="back-button">
           <mat-icon>arrow_back</mat-icon>
         </button>
         <h1>User information</h1>
@@ -13,9 +13,9 @@
         <p>Name: {{ user.firstName }} {{ user.lastName | uppercase }}</p>
         <p>Email: {{ user.email }}</p>
         <p *ngIf="user.admin" class="my2">You are admin</p>
-        <div *ngIf="!user.admin" fxLayout="column" class="my2" fxLayoutAlign="center center">
+        <div fxLayout="column" class="my2" fxLayoutAlign="center center">
           <p>Delete my account:</p>
-          <button mat-raised-button color="warn" (click)="delete()">
+          <button mat-raised-button color="warn" (click)="delete()" data-cy="delete-account-button">
             <mat-icon>delete</mat-icon>
             <span class="ml1">Detail</span>
           </button>

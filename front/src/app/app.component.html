@@ -1,10 +1,11 @@
 <div class="app">
   <mat-toolbar color="primary" fxLayout="row" fxLayoutAlign="space-between center">
-    <span>Yoga app</span>
+    <span data-cy="app-title">Yoga app</span>
     <div *ngIf="$isLogged() | async; else notLogged">
       <span routerLink="sessions" class="link">Sessions</span>
-      <span routerLink="me" class="link">Account</span>
-      <span (click)="logout()" class="link">Logout</span>
+      <span routerLink="me" class="link" data-cy="profile-link">Account</span>
+      <span data-cy="user-name" class="link">{{sessionInformation?.firstName}} {{sessionInformation?.lastName}}</span>
+      <span (click)="logout()" class="link" data-cy="logout-button">Logout</span>
     </div>
     <ng-template #notLogged>
       <div>
